@@ -93,4 +93,4 @@ To reduce unnecessary workflow runs, scheduled workflows have been disabled in t
 
     建议：如果你长期需要定时任务，定期（如每月）做一次无关紧要的提交，防止被自动禁用。
 
-    > 补充，我在仓库中尝试引入了`marketplace`的`Keepalive Workflow`他会在仓库中每45天创建一个空提交以保持其活跃，你也可以选择启用这个工作流来自动保活。
+    > 补充，我在仓库中尝试引入了`liskin/gh-workflow-keepalive`，理论上在此之后复刻仓库的或者进行同步后的仓库不需要再手动保活，具体详见action的`workflow-keepalive` Job
