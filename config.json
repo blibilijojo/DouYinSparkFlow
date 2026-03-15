@@ -2,7 +2,7 @@
   "multiTask": true,
   "taskCount": 5,
   "proxyAddress": "",
-  "messageTemplate": "续火花",
+  "messageTemplate": "[嗨]",
   "hitokotoTypes": [
     "文学",
     "影视",
