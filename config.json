@@ -2,7 +2,7 @@
   "multiTask": true,
   "taskCount": 5,
   "proxyAddress": "",
-  "messageTemplate": "[盖瑞]今日火花",
+  "messageTemplate": "[火花]",
   "hitokotoTypes": [
     "文学",
     "影视",
