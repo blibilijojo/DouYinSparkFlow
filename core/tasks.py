@@ -7,6 +7,11 @@ from core.msg_builder import build_message, build_message_with_openai
 from core.browser import get_browser
 
 
+# 好友昵称映射：旧名字 -> 新名字
+NICKNAME_MAPPING = {
+    "晚点起": "吃面包"
+}
+
 complates = {}
 
 config = get_config()
@@ -36,6 +41,12 @@ async def retry_operation(name, operation, retries=3, delay=2, *args, **kwargs):
                 raise
 
 
+
+def get_mapped_nickname(name):
+    """获取映射后的昵称，如果没有映射则返回原名"""
+    return NICKNAME_MAPPING.get(name, name)
+
+
 async def scroll_and_select_user(page, username, targets):
     """尝试滚动并查找用户名"""
     # 定义目标元素和滚动容器的选择器
@@ -50,6 +61,20 @@ async def scroll_and_select_user(page, username, targets):
 
     logger.debug(f"账号 {username} 开始查找目标好友列表")
     logger.debug(f"账号 {username} 目标好友列表: {targets}")
+
+
+    # 构建映射后的目标列表（用于匹配）
+    mapped_targets = set()
+    for t in targets:
+        mapped_targets.add(t)
+        mapped_targets.add(get_mapped_nickname(t))
+    
+    # 构建反向映射：新名字 -> 旧名字（用于日志和yield）
+    reverse_mapping = {}
+    for old_name, new_name in NICKNAME_MAPPING.items():
+        reverse_mapping[new_name] = old_name
+
+    logger.debug(f"账号 {username} 昵称映射: {NICKNAME_MAPPING}")
 
     logger.debug(f"账号 {username} 点击进入好友标签页")
     # 点击好友标签页
@@ -95,17 +120,25 @@ async def scroll_and_select_user(page, username, targets):
                 found_usernames.add(targetName)
 
                 logger.debug(f"账号 {username} 找到好友 {targetName}")
-                # 检查是否是目标用户名
-                if targetName in targets:
-                    await element.click()
-                    logger.info(
-                        f"账号 {username} 选中目标好友 {targetName} 准备开始交互"
-                    )
-                    yield targetName
+                # 检查是否是目标用户名（支持原始名称或映射后的名称）
+                if targetName in mapped_targets:
+                    # 确定使用哪个名称作为目标标识
+                    target_key = targetName
+                    # 如果这个名称是映射后的新名称，获取对应的旧名称
+                    if targetName in reverse_mapping:
+                        target_key = reverse_mapping[targetName]
                     
-                    # [修改] 标记已找到，如果全找到了直接退出
-                    if targetName in remaining_targets:
-                        remaining_targets.remove(targetName)
+                    # 检查这个目标是否还在剩余列表中
+                    if target_key in remaining_targets or targetName in remaining_targets:
+                        await element.click()
+                        logger.info(
+                            f"账号 {username} 选中目标好友 {targetName} 准备开始交互"
+                        )
+                        yield target_key  # 返回配置中的原始名称
+                        
+                        # [修改] 标记已找到，如果全找到了直接退出
+                        if target_key in remaining_targets:
+                            remaining_targets.remove(target_key)
                     if len(remaining_targets) == 0:
                         logger.info(f"账号 {username} 所有目标好友均已找到，停止搜索")
                         return
